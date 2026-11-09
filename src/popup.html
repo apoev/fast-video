@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>Fast Video</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <header>
+    <img src="../icons/icon32.png" width="32" height="32" alt="" />
+    <div>
+      <strong>Fast Video</strong>
+      <p id="status">Проверяю страницу…</p>
+    </div>
+  </header>
+
+  <div class="actions" id="actions"></div>
+
+  <label class="field">
+    <span>Своя скорость <b id="pref-out">1.0×</b></span>
+    <input id="pref" type="range" min="0.5" max="3" step="0.1" value="1" />
+  </label>
+  <p class="hint">D ставит 1×. Если ролик уже на 1×, D включает эту скорость. S и F сдвигают на 0.1, от 0.1× до 9.9×. E перематывает текущий ролик к концу и жмёт «пропустить рекламу», если кнопка уже есть.</p>
+
+  <label class="check"><input id="block" type="checkbox" /> <span id="block-label">Не работать на этом сайте</span></label>
+  <label class="check"><input id="touch" type="checkbox" /> Кнопки поверх видео</label>
+
+  <h2>Клавиши</h2>
+  <div id="shortcuts"></div>
+  <button type="button" class="ghost" id="reset">Сбросить клавиши и скорость</button>
+  <p class="foot">Настройки только на этом компьютере. В поля ввода клавиши не перехватываются.</p>
+
+  <script src="engine.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>Fast Video sandbox</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 24px; background: #111; color: #f3f3f3; }
+    video { width: 320px; height: 180px; background: #203040; display: block; }
+    #log { white-space: pre-wrap; line-height: 1.45; }
+    .ok { color: #8dde9a; }
+    .bad { color: #ff8d8d; }
+  </style>
+</head>
+<body>
+  <h1>Fast Video</h1>
+  <video id="player" playsinline muted></video>
+  <p id="log">Запуск…</p>
+  <script src="../src/engine.js"></script>
+  <script>
+    const log = document.getElementById('log');
+    const lines = [];
+    function report(name, ok, detail) {
+      lines.push((ok ? 'OK  ' : 'FAIL ') + name + (detail ? ' — ' + detail : ''));
+      log.innerHTML = lines.map(function (line) {
+        return '<div class="' + (line.indexOf('FAIL') === 0 ? 'bad' : 'ok') + '">' + line + '</div>';
+      }).join('');
+    }
+
+    async function sampleVideo(video) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 320;
+      canvas.height = 180;
+      const ctx = canvas.getContext('2d');
+      const stream = canvas.captureStream(20);
+      let frame = 0;
+      const drawing = setInterval(function () {
+        ctx.fillStyle = frame % 2 ? '#1d4e89' : '#f0b429';
+        ctx.fillRect(0, 0, 320, 180);
+        frame += 1;
+      }, 50);
+      const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp8') ? 'video/webm;codecs=vp8' : 'video/webm';
+      const recorder = new MediaRecorder(stream, { mimeType: mime });
+      const chunks = [];
+      recorder.ondataavailable = function (event) { if (event.data.size) chunks.push(event.data); };
+      const stopped = new Promise(function (resolve) { recorder.onstop = resolve; });
+      recorder.start(100);
+      await new Promise(function (resolve) { setTimeout(resolve, 1200); });
+      recorder.stop();
+      await stopped;
+      clearInterval(drawing);
+      video.src = URL.createObjectURL(new Blob(chunks, { type: recorder.mimeType || mime }));
+      video.loop = true;
+      await video.play();
+      const started = performance.now();
+      while (performance.now() - started < 3000) {
+        const known = isFinite(video.duration) && video.duration > 0.4 && video.readyState >= 2;
+        const seekable = video.seekable && video.seekable.length > 0;
+        if (known && seekable && !video.paused) break;
+        await new Promise(function (resolve) { setTimeout(resolve, 50); });
+      }
+    }
+
+    async function main() {
+      const video = document.getElementById('player');
+      const controller = FastVideo.createController({
+        initialSettings: { preferredRate: 1.5, showTouchControls: true }
+      });
+      controller.start();
+      try {
+        await sampleVideo(video);
+      } catch (err) {
+        report('видео', false, err.message);
+        return;
+      }
+      const seekable = video.seekable && video.seekable.length > 0;
+      report('ролик играет', !video.paused && video.readyState >= 2 && isFinite(video.duration) && video.duration > 0.4 && seekable,
+        'duration ' + video.duration.toFixed(2) + ', ready ' + video.readyState + ', seekable ' + seekable);
+
+      controller.requestAction('faster');
+      report('быстрее', Math.abs(video.playbackRate - 1.1) < 0.02, String(video.playbackRate));
+
+      controller.requestAction('normal');
+      report('D с 1.1× на 1×', Math.abs(video.playbackRate - 1) < 0.02, String(video.playbackRate));
+
+      controller.requestAction('normal');
+      report('D с 1× на свою 1.5×', Math.abs(video.playbackRate - 1.5) < 0.02, String(video.playbackRate));
+
+      const hud = document.querySelector('fast-video-hud');
+      report('оверлей скорости', !!hud && hud.style.getPropertyValue('opacity') === '1');
+
+      const before = video.currentTime;
+      controller.requestAction('skip');
+      await new Promise(function (resolve) { setTimeout(resolve, 50); });
+      report('пропуск к концу', video.currentTime > before && video.duration - video.currentTime < 0.25,
+        video.currentTime.toFixed(2) + ' / ' + video.duration.toFixed(2));
+
+      const dock = document.querySelector('fast-video-dock');
+      report('кнопки на странице', !!dock && getComputedStyle(dock).display !== 'none');
+      document.title = lines.some(function (line) { return line.indexOf('FAIL') === 0; }) ? 'FAIL' : 'PASS';
+    }
+
+    main().catch(function (err) {
+      report('исключение', false, err && err.message);
+      document.title = 'FAIL';
+    });
+  </script>
+</body>
+</html>

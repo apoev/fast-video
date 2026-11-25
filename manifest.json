@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Fast Video",
-  "version": "1.0.0",
+  "version": "1.2.27",
   "description": "Скорость любого онлайн-видео: медленнее, своя скорость, быстрее и пропуск текущего ролика.",
   "permissions": ["storage"],
   "host_permissions": ["<all_urls>"],

@@ -5,6 +5,20 @@
     initialSettings: FastVideo.defaultSettings(),
     persist: function (settings) {
       chrome.storage.local.set({ settings: settings });
+    },
+    playlistStore: {
+      load: function (done) {
+        chrome.storage.local.get('playlist', function (data) {
+          void chrome.runtime.lastError;
+          done(data && data.playlist);
+        });
+      },
+      save: function (playlist, done) {
+        chrome.storage.local.set({ playlist: playlist }, function () {
+          void chrome.runtime.lastError;
+          if (done) done();
+        });
+      }
     }
   });
 
@@ -15,7 +29,9 @@
   });
 
   chrome.storage.onChanged.addListener(function (changes, area) {
-    if (area === 'local' && changes.settings) controller.applySettings(changes.settings.newValue);
+    if (area !== 'local') return;
+    if (changes.settings) controller.applySettings(changes.settings.newValue);
+    if (changes.playlist) controller.applyPlaylist(changes.playlist.newValue);
   });
 
   chrome.runtime.onMessage.addListener(function (message, _sender, sendResponse) {

@@ -11,7 +11,14 @@
   var prefOut = document.getElementById('pref-out');
   var block = document.getElementById('block');
   var blockLabel = document.getElementById('block-label');
-  var touch = document.getElementById('touch');
+  var place = document.getElementById('place');
+  var presets = document.getElementById('presets');
+  var fade = document.getElementById('fade');
+  var fadeOut = document.getElementById('fade-out');
+  var hudFade = document.getElementById('hud-fade');
+  var hudFadeOut = document.getElementById('hud-fade-out');
+  var scale = document.getElementById('scale');
+  var scaleOut = document.getElementById('scale-out');
 
   FastVideo.ACTIONS.forEach(function (action) {
     var button = document.createElement('button');
@@ -85,7 +92,18 @@
     block.disabled = !host;
     block.checked = !!(host && FastVideo.isHostBlocked(settings.disabledHosts, host));
     blockLabel.textContent = host ? 'Не работать на ' + host : 'Не работать на этом сайте';
-    touch.checked = settings.showTouchControls === true;
+    place.checked = settings.dockPlace === 'player';
+    var placeButtons = document.querySelectorAll('#places button');
+    for (var p = 0; p < placeButtons.length; p++) {
+      placeButtons[p].classList.toggle('on', placeButtons[p].dataset.anchor === settings.dockAnchor);
+    }
+    presets.checked = settings.showPresets !== false;
+    if (document.activeElement !== fade) fade.value = String(Math.round((1 - settings.dockOpacity) * 100));
+    fadeOut.textContent = Math.round((1 - settings.dockOpacity) * 100) + '%';
+    if (document.activeElement !== hudFade) hudFade.value = String(Math.round((1 - settings.hudOpacity) * 100));
+    hudFadeOut.textContent = Math.round((1 - settings.hudOpacity) * 100) + '%';
+    if (document.activeElement !== scale) scale.value = String(Math.round(settings.dockScale * 100));
+    scaleOut.textContent = Math.round(settings.dockScale * 100) + '%';
   }
 
   function save() {
@@ -93,7 +111,7 @@
   }
 
   function commit(next) {
-    settings = FastVideo.normalizeSettings(next);
+    settings = FastVideo.normalizeSettings(Object.assign({}, settings, next));
     save();
     render();
   }
@@ -120,28 +138,39 @@
     });
   });
 
-  touch.addEventListener('change', function () {
-    commit({
-      preferredRate: settings.preferredRate,
-      shortcuts: settings.shortcuts,
-      disabledHosts: settings.disabledHosts,
-      showTouchControls: touch.checked
+  place.addEventListener('change', function () {
+    commit({ dockPlace: place.checked ? 'player' : 'screen' });
+  });
+
+  var placeButtons = document.querySelectorAll('#places button');
+  for (var p = 0; p < placeButtons.length; p++) {
+    placeButtons[p].addEventListener('click', function (event) {
+      commit({ dockAnchor: event.currentTarget.dataset.anchor });
     });
+  }
+
+  presets.addEventListener('change', function () {
+    commit({ showPresets: presets.checked });
+  });
+
+  fade.addEventListener('input', function () {
+    fadeOut.textContent = fade.value + '%';
+    commit({ dockOpacity: 1 - Number(fade.value) / 100 });
+  });
+
+  hudFade.addEventListener('input', function () {
+    hudFadeOut.textContent = hudFade.value + '%';
+    commit({ hudOpacity: 1 - Number(hudFade.value) / 100 });
+  });
+
+  scale.addEventListener('input', function () {
+    scaleOut.textContent = scale.value + '%';
+    commit({ dockScale: Number(scale.value) / 100 });
   });
 
   document.getElementById('reset').addEventListener('click', function () {
     recording = null;
-    commit({
-      preferredRate: 1,
-      shortcuts: {
-        slower: { code: 'KeyS', alt: false, ctrl: false, shift: false, meta: false },
-        normal: { code: 'KeyD', alt: false, ctrl: false, shift: false, meta: false },
-        faster: { code: 'KeyF', alt: false, ctrl: false, shift: false, meta: false },
-        skip: { code: 'KeyE', alt: false, ctrl: false, shift: false, meta: false }
-      },
-      disabledHosts: settings.disabledHosts,
-      showTouchControls: null
-    });
+    commit(FastVideo.defaultSettings());
   });
 
   window.addEventListener('keydown', function (event) {

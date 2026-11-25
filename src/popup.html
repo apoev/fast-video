@@ -23,11 +23,30 @@
   <p class="hint">D ставит 1×. Если ролик уже на 1×, D включает эту скорость. S и F сдвигают на 0.1, от 0.1× до 9.9×. E перематывает текущий ролик к концу и жмёт «пропустить рекламу», если кнопка уже есть.</p>
 
   <label class="check"><input id="block" type="checkbox" /> <span id="block-label">Не работать на этом сайте</span></label>
-  <label class="check"><input id="touch" type="checkbox" /> Кнопки поверх видео</label>
+  <label class="check"><input id="place" type="checkbox" checked /> Панель в окне плеера</label>
+  <div class="places" id="places">
+    <button type="button" data-anchor="top">Сверху</button>
+    <button type="button" data-anchor="bottom">Снизу</button>
+    <button type="button" data-anchor="left">Слева</button>
+    <button type="button" data-anchor="right">Справа</button>
+  </div>
+  <label class="check"><input id="presets" type="checkbox" /> Скорости 1, 1,5, 2 и 2,5</label>
+  <label class="field">
+    <span>Прозрачность панели <b id="fade-out">55%</b></span>
+    <input id="fade" type="range" min="0" max="75" step="5" value="55" />
+  </label>
+  <label class="field">
+    <span>Прозрачность надписи <b id="hud-fade-out">55%</b></span>
+    <input id="hud-fade" type="range" min="0" max="75" step="5" value="55" />
+  </label>
+  <label class="field">
+    <span>Размер панели <b id="scale-out">80%</b></span>
+    <input id="scale" type="range" min="60" max="160" step="10" value="80" />
+  </label>
 
   <h2>Клавиши</h2>
   <div id="shortcuts"></div>
-  <button type="button" class="ghost" id="reset">Сбросить клавиши и скорость</button>
+  <button type="button" class="ghost" id="reset">Сбросить к стандартным</button>
   <p class="foot">Настройки только на этом компьютере. В поля ввода клавиши не перехватываются.</p>
 
   <script src="engine.js"></script>
